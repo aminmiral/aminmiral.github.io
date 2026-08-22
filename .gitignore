@@ -1,0 +1,13 @@
+# local preview renders
+preview-*.png
+preview-*.html
+
+# superseded draft, kept locally only
+index-v1-rejected.html
+
+# os / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

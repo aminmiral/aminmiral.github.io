@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Miral Amin</title>
+<meta name="description" content="Miral Amin — Odoo backend developer at RDFlex. I build systems that turn messy human activity into records a machine can read, and check whether they are telling the truth.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ============================================================
+   ONE PAGE, ONE ENVIRONMENT.
+
+   The wall of purchase-order records is a fixed background behind
+   the ERP half of the document. As you scroll, the detector runs:
+   the clean records fade out, the seven fraudulent ones stay lit,
+   and then they clear too — the later projects each get their own
+   image. No panels, no bands, no colour slabs; the page never
+   changes surface, it only changes state.
+   ============================================================ */
+
+:root{
+  --black:#0A0A0B;
+  --white:#FFFFFF;
+  --red:#FF2D16;
+  --dim:#93939B;
+  --dimmer:#6B6B73;
+
+  --sans:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+
+  --pad:clamp(1.25rem,5vw,5.5rem);
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto;}}
+
+body{
+  margin:0;
+  background:var(--black);
+  color:var(--white);
+  font-family:var(--sans);
+  font-weight:400;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+::selection{background:var(--red);color:var(--white);}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:2px solid var(--red);outline-offset:4px;}
+
+/* ---------- the persistent wall ---------- */
+#grid{
+  position:fixed;
+  inset:0;
+  width:100%;height:100%;
+  display:block;
+  z-index:0;
+  pointer-events:none;
+}
+.page{position:relative;z-index:1;}
+
+/* ---------- type roles ---------- */
+.mono{
+  font-family:var(--mono);
+  font-size:clamp(.68rem,.63rem + .16vw,.78rem);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  font-variant-numeric:tabular-nums;
+  color:var(--dim);
+}
+.display{
+  font-weight:800;
+  line-height:.9;
+  letter-spacing:-.035em;
+  margin:0;
+}
+.prose{
+  font-size:clamp(1.02rem,.96rem + .34vw,1.24rem);
+  line-height:1.6;
+  font-weight:400;
+  max-width:46ch;
+  margin:0;
+  color:#D9D9DE;
+}
+.prose + .prose{margin-top:1.15em;}
+.prose.quiet{color:var(--dim);}
+.red{color:var(--red);}
+
+/* ---------- one continuous flow, no bands ---------- */
+section{padding-inline:var(--pad);}
+
+/* 1 — opening */
+.open{
+  min-height:100svh;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  padding-block:var(--pad) calc(var(--pad) * .85);
+}
+.open__top{
+  display:flex;flex-wrap:wrap;gap:.5rem 1.6rem;
+  align-items:baseline;justify-content:space-between;
+}
+.open__mid{display:flex;align-items:flex-end;padding-block:clamp(2rem,6vh,4.5rem);}
+.open__name{
+  font-size:clamp(3.6rem,13.5vw,13rem);
+  text-transform:uppercase;
+  line-height:.86;
+}
+.open__name span{display:block;}
+.open__bot{display:grid;gap:1.5rem;align-items:end;}
+@media (min-width:900px){
+  .open__bot{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:3rem;}
+}
+.open__claim{
+  font-size:clamp(1.04rem,.95rem + .55vw,1.34rem);
+  line-height:1.45;margin:0;max-width:42ch;
+}
+
+.readout{
+  font-family:var(--mono);
+  font-size:clamp(.66rem,.62rem + .14vw,.75rem);
+  letter-spacing:.05em;
+  line-height:2;
+  color:var(--dimmer);
+  min-height:6em;
+  border-left:2px solid var(--red);
+  padding:.7rem .9rem .75rem;
+  background:rgba(10,10,11,.82);
+}
+.readout b{color:var(--white);font-weight:500;}
+.readout .flagged{color:var(--red);}
+
+.links{display:flex;flex-wrap:wrap;gap:.55rem 1.5rem;}
+.links a{
+  font-family:var(--mono);
+  font-size:clamp(.68rem,.63rem + .16vw,.78rem);
+  letter-spacing:.1em;text-transform:uppercase;
+  padding-bottom:.2rem;
+  border-bottom:1px solid rgba(255,255,255,.3);
+  transition:color .16s ease,border-color .16s ease;
+}
+.links a:hover{color:var(--red);border-color:var(--red);}
+
+/* 2 — statement */
+.statement{padding-block:clamp(6rem,20vh,14rem);}
+.statement p{
+  font-weight:600;
+  font-size:clamp(1.75rem,1rem + 3.9vw,4.9rem);
+  line-height:1.04;
+  letter-spacing:-.032em;
+  margin:0;
+  max-width:18ch;
+  text-wrap:balance;
+}
+.statement p + p{margin-top:.6em;max-width:23ch;color:var(--dim);}
+
+/* 3 — the finding */
+.finding{padding-block:clamp(3rem,8vh,6rem);}
+.finding__head{display:grid;gap:1.8rem;margin-bottom:clamp(3.5rem,10vh,7rem);}
+@media (min-width:900px){
+  .finding__head{grid-template-columns:minmax(0,.9fr) minmax(0,1fr);gap:4.5rem;}
+}
+.finding__title{font-size:clamp(2.4rem,1.2rem + 5.2vw,6.4rem);text-transform:uppercase;}
+
+.score{padding-block:clamp(1.5rem,5vh,3.5rem);}
+.score__n{
+  display:block;
+  font-weight:800;
+  font-size:clamp(5.2rem,25vw,23rem);
+  line-height:.78;
+  letter-spacing:-.05em;
+  font-variant-numeric:tabular-nums;
+  margin:0 0 .35em;
+}
+.score__n--miss{color:var(--red);}
+.score__lab{
+  display:block;
+  font-size:clamp(1.06rem,.96rem + .6vw,1.6rem);
+  font-weight:600;line-height:1.24;letter-spacing:-.018em;
+  max-width:34ch;margin-bottom:.5rem;
+}
+.score__sub{
+  display:block;
+  font-family:var(--mono);font-size:.73rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--dimmer);
+}
+
+/* 3 — the day job, given the weight it deserves */
+.job{padding-block:clamp(4rem,12vh,9rem);}
+.job__head{display:grid;gap:1.8rem;margin-bottom:clamp(2rem,6vh,4rem);}
+@media (min-width:900px){
+  .job__head{grid-template-columns:minmax(0,.9fr) minmax(0,1fr);gap:4.5rem;}
+}
+.job__title{font-size:clamp(2.4rem,1.2rem + 5.2vw,6.4rem);text-transform:uppercase;}
+
+/* 6 — chat analyzer */
+.chat{padding-block:clamp(4rem,12vh,9rem);}
+.chat__grid{display:grid;gap:clamp(2.5rem,6vw,5rem);align-items:center;}
+@media (min-width:900px){
+  .chat__grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+}
+.chat__title{font-size:clamp(2.4rem,1.2rem + 5.2vw,6.4rem);text-transform:uppercase;}
+#heat{width:100%;height:auto;display:block;}
+.sign__title{font-size:clamp(2.4rem,1.2rem + 5.2vw,6.4rem);text-transform:uppercase;}
+
+/* 4 — signspeak */
+.sign{padding-block:clamp(4rem,12vh,9rem);}
+.sign__grid{display:grid;gap:clamp(2.5rem,6vw,5rem);align-items:center;}
+@media (min-width:900px){
+  .sign__grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+}
+#hand{width:100%;height:auto;display:block;}
+.sign__ms{
+  font-weight:800;
+  font-size:clamp(3.8rem,13vw,11rem);
+  line-height:.84;letter-spacing:-.045em;
+  font-variant-numeric:tabular-nums;
+  margin:clamp(1.8rem,5vh,3rem) 0 .5rem;
+}
+.sign__ms i{font-style:normal;font-size:.34em;letter-spacing:-.02em;}
+
+/* 5 — work */
+.work{padding-block:clamp(4rem,12vh,9rem);}
+.work__item{
+  display:grid;gap:.6rem clamp(2rem,5vw,4.5rem);
+  padding-block:clamp(2rem,6vh,3.8rem);
+}
+@media (min-width:880px){
+  .work__item{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);}
+}
+.work__role{
+  font-size:clamp(1.7rem,1.1rem + 2.3vw,3.1rem);
+  font-weight:700;line-height:1.02;letter-spacing:-.03em;margin:0;
+}
+.work__meta{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.09em;
+  text-transform:uppercase;margin:.8rem 0 0;color:var(--dimmer);
+}
+
+/* 6 — toolkit */
+.kit{padding-block:clamp(4rem,12vh,9rem);}
+.kit p{
+  font-size:clamp(1.3rem,.98rem + 1.9vw,3rem);
+  line-height:1.25;font-weight:500;letter-spacing:-.024em;
+  margin:0;max-width:26ch;
+}
+.kit .sep{color:var(--red);}
+
+/* 7 — end */
+.end{padding-block:clamp(5rem,16vh,11rem) clamp(3rem,8vh,5rem);}
+.end__mail{
+  display:inline-block;
+  font-weight:800;
+  font-size:clamp(1.6rem,.4rem + 6.2vw,6.4rem);
+  line-height:.95;letter-spacing:-.04em;
+  word-break:break-word;
+  margin:0 0 clamp(2rem,6vh,3.5rem);
+  transition:color .18s ease;
+}
+.end__mail:hover{color:var(--red);}
+.end__foot{
+  display:flex;flex-wrap:wrap;gap:1rem 2.5rem;
+  align-items:baseline;justify-content:space-between;
+  margin-top:clamp(3rem,9vh,6rem);
+}
+.end__foot p{margin:0;max-width:52ch;font-size:.94rem;line-height:1.55;color:var(--dimmer);}
+
+/* ---------- scroll motion ---------- */
+.js .rise{opacity:0;transform:translateY(28px);}
+.js .rise.on{
+  opacity:1;transform:none;
+  transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1);
+}
+@media (prefers-reduced-motion:reduce){
+  .js .rise{opacity:1!important;transform:none!important;transition:none!important;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="grid" aria-hidden="true"></canvas>
+
+<div class="page">
+
+  <!-- 1 — opening -->
+  <section class="open">
+    <div class="open__top">
+      <span class="mono">Odoo Backend Developer · RDFlex</span>
+      <span class="mono" id="tally">records · 7 flagged</span>
+    </div>
+
+    <div class="open__mid">
+      <h1 class="display open__name"><span>Miral</span><span>Amin</span></h1>
+    </div>
+
+    <div class="open__bot">
+      <div>
+        <p class="open__claim">
+          I build systems that turn messy human activity into records a machine can read —
+          purchase orders, hand signs, chat logs — and then check whether those records are
+          telling the truth.
+        </p>
+        <div class="links" style="margin-top:1.7rem;">
+          <a href="mailto:aminmiral0007@gmail.com">Email</a>
+          <a href="https://github.com/aminmiral" rel="me noopener">GitHub</a>
+          <a href="Miral_Amin_Resume.pdf">Résumé</a>
+          <a href="tel:+919924748030">+91 99247 48030</a>
+        </div>
+      </div>
+      <div class="readout" id="readout">
+        Every mark behind this page is a purchase-order event.<br>
+        Seven of them are fraudulent.<br>
+        Drag across the wall to read one.
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 — statement -->
+  <section class="statement">
+    <p class="rise">Everything I build reads something messy and decides what it means.</p>
+    <p class="rise">At RDFlex that is an ERP turning a business into records. On my own time it is fraud hiding inside those records, a hand moving in front of a webcam, or four years of a group chat.</p>
+  </section>
+
+  <!-- 3 — the day job -->
+  <section class="job">
+    <div class="job__head">
+      <div>
+        <h2 class="display job__title rise">Odoo<br>Backend</h2>
+        <p class="mono rise" style="margin:1.4rem 0 0;">RDFlex · Gandhinagar · Since July 2025</p>
+      </div>
+      <div>
+        <p class="prose rise">
+          I build and customise Odoo modules across Inventory, Sales, Purchase and
+          Manufacturing, extending core models through the ORM with computed fields, onchange
+          logic and business-rule validation, and I write the automation that ties those modules
+          together: scheduled actions, approval workflows, notification triggers that fire on
+          record state changes.
+        </p>
+        <p class="prose quiet rise">
+          The rest is production reality. Profiling and rewriting slow ORM and SQL queries
+          against live PostgreSQL, building QWeb PDF reports, integrating outside services over
+          REST and XML-RPC, and running module upgrades and data migrations across several
+          client environments at once.
+        </p>
+      </div>
+    </div>
+
+    <div class="work__item rise">
+      <div>
+        <h3 class="work__role">Odoo Developer Intern</h3>
+        <p class="work__meta">RDFlex · Gandhinagar · Jan — Jun 2025</p>
+      </div>
+      <div>
+        <p class="prose">
+          Python features for client-specific Odoo implementations under mentorship: custom
+          models, views, wizards, and the data-import scripts used to onboard client records.
+        </p>
+        <p class="prose quiet">
+          Full sprint cycle — code review, debugging, planning — plus deployment support and
+          functional testing ahead of client delivery.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 — erp anomaly bench -->
+  <section class="finding">
+    <div class="finding__head">
+      <h2 class="display finding__title rise">ERP<br>Anomaly<br>Bench</h2>
+      <div>
+        <p class="prose rise">
+          I drove a real Odoo instance — Docker, plus a custom audit addon — through
+          procure-to-pay flows and injected seven fraud typologies into them: duplicate
+          invoices, three-way-match violations, split purchases, subtle overbilling. Every
+          trace and every event came out carrying a ground-truth label.
+        </p>
+        <p class="prose quiet rise">
+          Then six unsupervised detectors ran against it under leakage-safe temporal splits —
+          Isolation Forest, LOF, one-class SVM, a Markov negative-log-likelihood model,
+          rule-based audit checks. The gap between the two numbers below is the whole point
+          of the project.
+        </p>
+        <p class="links rise" style="margin-top:1.9rem;"><a href="https://github.com/aminmiral/erp-anomaly-bench" rel="noopener">aminmiral/erp-anomaly-bench</a></p>
+      </div>
+    </div>
+
+    <div class="score rise">
+      <span class="score__n">1.000</span>
+      <span class="score__lab">Fraud that sits inside a single document is caught perfectly.</span>
+      <span class="score__sub">AUPRC · duplicate invoices, three-way-match violations, overbilling</span>
+    </div>
+
+    <div class="score rise">
+      <span class="score__n score__n--miss">0.099</span>
+      <span class="score__lab">Fraud deliberately spread across traces defeats every classical baseline in the set.</span>
+      <span class="score__sub">AUPRC · split purchases, cross-trace</span>
+    </div>
+  </section>
+
+  <!-- 5 — signspeak -->
+  <section class="sign">
+    <div class="sign__grid">
+      <div>
+        <h2 class="display sign__title rise">Sign<br>Speak</h2>
+        <p class="prose rise" style="margin-top:clamp(1.6rem,4vh,2.5rem);">
+          Real-time Indian Sign Language, both directions. Webcam signs are read as MediaPipe
+          hand landmarks and spoken through a tiered TTS stack — an Indian-voice neural service
+          online, an offline engine when there's no network — while Vosk handles speech-to-text
+          for the hearing side's reply.
+        </p>
+        <p class="prose quiet rise">
+          No video is ever stored; the pipeline is landmark-only by design. The dynamic word-sign
+          tier runs MediaPipe Holistic into an LSTM over 30-frame sequences, trained with mirror
+          and temporal-dropout augmentation.
+        </p>
+        <p class="display sign__ms rise">8.6<i> ms</i></p>
+        <p class="mono rise">Per inference, p50, on CPU · 62 headless tests · GitHub Actions CI · evaluated by per-sign F1 and leave-one-signer-out accuracy</p>
+        <p class="links rise" style="margin-top:1.9rem;"><a href="https://github.com/aminmiral/signspeak" rel="noopener">aminmiral/signspeak</a></p>
+      </div>
+      <canvas id="hand" width="620" height="700" aria-label="Diagram of the twenty-one hand landmarks MediaPipe tracks"></canvas>
+    </div>
+  </section>
+
+  <!-- 6 — whatsapp chat analyzer -->
+  <section class="chat">
+    <div class="chat__grid">
+      <canvas id="heat" width="720" height="300" aria-label="Activity heatmap of a chat export, by hour of day and day of week"></canvas>
+      <div>
+        <h2 class="display chat__title rise">Chat<br>Analyzer</h2>
+        <p class="prose rise" style="margin-top:clamp(1.6rem,4vh,2.5rem);">
+          Most of the work is the parser. WhatsApp's export format is hostile — multi-line
+          messages, media placeholders, mixed Hindi and English — and every number downstream
+          depends on reading it correctly first.
+        </p>
+        <p class="prose quiet rise">
+          What comes out is activity heatmaps by hour and weekday, emoji and word frequency,
+          and sentiment trends, in a Streamlit dashboard that never leaves your machine.
+        </p>
+        <p class="mono rise" style="margin-top:1.4rem;">Python · Pandas · NLP · Streamlit</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7a — education -->
+  <section class="work">
+    <div class="work__item rise">
+      <div>
+        <h2 class="work__role">B.Tech, Computer Engineering</h2>
+        <p class="work__meta">L.J. University · Gujarat · 2022 — 2026</p>
+      </div>
+      <div>
+        <p class="prose quiet">Graduated January 2026. CGPA 7.8.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7b — toolkit -->
+  <section class="kit">
+    <p class="rise">
+      Python <span class="sep">·</span> Odoo ORM <span class="sep">·</span> PostgreSQL <span class="sep">·</span>
+      Django <span class="sep">·</span> scikit-learn <span class="sep">·</span> OpenCV <span class="sep">·</span>
+      MediaPipe <span class="sep">·</span> Pandas <span class="sep">·</span> NumPy <span class="sep">·</span>
+      Docker <span class="sep">·</span> pytest <span class="sep">·</span> GitHub Actions <span class="sep">·</span>
+      MongoDB <span class="sep">·</span> Java <span class="sep">·</span> JavaScript <span class="sep">·</span>
+      Linux <span class="sep">·</span> process mining <span class="sep">·</span> anomaly detection
+    </p>
+  </section>
+
+  <!-- 7 — end -->
+  <footer class="end">
+    <a class="display end__mail rise" href="mailto:aminmiral0007@gmail.com">aminmiral0007@gmail.com</a>
+    <div class="links rise">
+      <a href="https://github.com/aminmiral" rel="me noopener">github.com/aminmiral</a>
+      <a href="tel:+919924748030">+91 99247 48030</a>
+      <a href="Miral_Amin_Resume.pdf">Résumé (PDF)</a>
+    </div>
+    <div class="end__foot">
+      <p>Ahmedabad, India. Best reached by email. Set in Archivo and IBM Plex Mono; written by hand in one file, no framework.</p>
+      <span class="mono">2026</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.add('js');
+
+  /* ---------------- content rises in on scroll ---------------- */
+  var risers = document.querySelectorAll('.rise');
+  if(reduce || !('IntersectionObserver' in window)){
+    risers.forEach(function(el){ el.classList.add('on'); });
+  } else {
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
+    },{rootMargin:'0px 0px -12% 0px',threshold:.05});
+    risers.forEach(function(el){ io.observe(el); });
+  }
+
+  /* =============================================================
+     THE WALL — fixed behind the whole page.
+     Scrolling runs the detector: clean records fade out,
+     the seven fraudulent ones stay lit.
+     ============================================================= */
+  var cv = document.getElementById('grid'),
+      ctx = cv.getContext('2d'),
+      readout = document.getElementById('readout'),
+      tally = document.getElementById('tally');
+
+  var CW=9, CH=5, GX=5, GY=5;
+  var cols=0, rows=0, cells=[], offX=0, offY=0, progress=0;
+
+  var VENDORS=['NAVKAR TRADING','SHREE POLYMERS','ARIHANT STEEL','KP LOGISTICS',
+               'MEHTA PACKAGING','VIRAJ FASTENERS','SANGHVI TOOLS','RUDRA CHEMICALS'];
+  var ACTIONS=['PO CONFIRMED','GRN POSTED','INVOICE MATCHED','PAYMENT RELEASED',
+               'RFQ SENT','QTY RECEIVED','BILL VALIDATED','PO AMENDED'];
+  var FRAUDS =['DUPLICATE INVOICE','THREE-WAY-MATCH VIOLATION','SPLIT PURCHASE',
+               'SPLIT PURCHASE','SUBTLE OVERBILLING','DUPLICATE INVOICE','SPLIT PURCHASE'];
+
+  function rnd(seed){ var x=Math.sin(seed*12.9898)*43758.5453; return x-Math.floor(x); }
+
+  function build(){
+    var w=cv.clientWidth, h=cv.clientHeight;
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    cv.width=w*dpr; cv.height=h*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    cols=Math.floor((w+GX)/(CW+GX));
+    rows=Math.floor((h+GY)/(CH+GY));
+    offX=Math.round((w-(cols*(CW+GX)-GX))/2);
+    offY=Math.round((h-(rows*(CH+GY)-GY))/2);
+
+    var total=cols*rows;
+    cells=new Array(total);
+    for(var i=0;i<total;i++){
+      var r=rnd(i+1);
+      cells[i]={
+        a:0.045+r*0.16, target:0.045+r*0.16, fraud:-1,
+        po:41000+Math.floor(rnd(i+7.77)*8999),
+        vendor:VENDORS[Math.floor(rnd(i+3.3)*VENDORS.length)],
+        action:ACTIONS[Math.floor(rnd(i+9.1)*ACTIONS.length)],
+        amt:Math.floor(2000+rnd(i+5.5)*240000)
+      };
+    }
+    for(var f=0;f<7;f++){
+      var idx=Math.floor(rnd(f*31.7+0.5)*total);
+      idx=Math.min(total-cols-2,Math.max(cols+2,idx));
+      cells[idx].fraud=f; cells[idx].a=cells[idx].target=0.9;
+    }
+    if(tally) tally.textContent=total.toLocaleString('en-US')+' records · 7 flagged';
+  }
+
+  function smooth(a,b,x){ var t=Math.min(1,Math.max(0,(x-a)/(b-a))); return t*t*(3-2*t); }
+
+  function draw(){
+    var w=cv.clientWidth, h=cv.clientHeight;
+    ctx.clearRect(0,0,w,h);
+
+    /* the detector runs as you scroll: clean records recede through
+       the ERP half of the page, then the flags clear too, so the
+       later projects get a surface of their own */
+    var clean = 1 - smooth(0.06, 0.50, progress) * 0.94;
+    var flag  = (0.55 + smooth(0.02, 0.34, progress) * 0.45)
+                * (1 - smooth(0.56, 0.72, progress) * 0.92);
+
+    for(var y=0;y<rows;y++){
+      for(var x=0;x<cols;x++){
+        var c=cells[y*cols+x];
+        if(!c) continue;
+        var px=offX+x*(CW+GX), py=offY+y*(CH+GY);
+        if(c.fraud>=0){
+          ctx.fillStyle='rgba(255,45,22,'+(c.a*flag).toFixed(3)+')';
+        } else {
+          var al=c.a*clean;
+          if(al<0.004) continue;
+          ctx.fillStyle='rgba(255,255,255,'+al.toFixed(3)+')';
+        }
+        ctx.fillRect(px,py,CW,CH);
+      }
+    }
+  }
+
+  var t=0;
+  function tick(){
+    t++;
+    if(t%3===0){
+      for(var k=0;k<7;k++){
+        var i=Math.floor(Math.random()*cells.length);
+        if(cells[i]&&cells[i].fraud<0) cells[i].target=0.045+Math.random()*0.42;
+      }
+    }
+    for(var j=0;j<cells.length;j++){
+      var c=cells[j];
+      if(!c) continue;
+      if(c.fraud>=0){ c.a=0.62+Math.sin(t/26+c.fraud)*0.3; }
+      else { c.a+=(c.target-c.a)*0.045; }
+    }
+    draw();
+    requestAnimationFrame(tick);
+  }
+
+  function onScroll(){
+    var max=document.documentElement.scrollHeight-window.innerHeight;
+    progress = max>0 ? Math.min(1,Math.max(0,window.scrollY/max)) : 0;
+    if(reduce) draw();
+  }
+
+  function fmt(n){ return '₹'+n.toLocaleString('en-IN'); }
+
+  function hover(pt){
+    if(!readout) return;
+    var mx=pt.clientX-offX, my=pt.clientY-offY;
+    var x=Math.floor(mx/(CW+GX)), y=Math.floor(my/(CH+GY));
+    if(x<0||y<0||x>=cols||y>=rows) return;
+    var c=cells[y*cols+x];
+    if(!c) return;
+    readout.innerHTML =
+      '<b>PO-'+c.po+'</b> &nbsp;'+c.vendor+'<br>'+
+      c.action+' &nbsp;·&nbsp; '+fmt(c.amt)+'<br>'+
+      (c.fraud>=0
+        ? '<span class="flagged">▶ FLAGGED — '+FRAUDS[c.fraud]+'</span>'
+        : 'clean');
+  }
+
+  build();
+  onScroll();
+  if(reduce){ draw(); } else { tick(); }
+
+  window.addEventListener('mousemove',hover,{passive:true});
+  window.addEventListener('touchmove',function(e){ hover(e.touches[0]); },{passive:true});
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',function(){ build(); onScroll(); draw(); },{passive:true});
+
+  /* =============================================================
+     THE HEATMAP — chat activity by hour of day and day of week,
+     which is what the analyzer actually outputs.
+     ============================================================= */
+  var mc = document.getElementById('heat');
+  if(mc){
+    var mx2 = mc.getContext('2d');
+    var HR = 24, DY = 7, GAPH = 4;
+    var cellW = (mc.width - 60 - (HR-1)*GAPH) / HR;
+    var cellH = (mc.height - 70 - (DY-1)*GAPH) / DY;
+    var DAYS = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+
+    /* people text late in the evening and barely at dawn */
+    function weight(h, d){
+      var evening = Math.exp(-Math.pow(h-22,2)/14);
+      var midday  = Math.exp(-Math.pow(h-14,2)/26) * 0.55;
+      var dawn    = h < 6 ? 0.04 : 0;
+      var weekend = (d >= 5) ? 1.22 : 1;
+      return Math.min(1,(evening + midday + dawn) * weekend);
+    }
+
+    function heatmap(){
+      mx2.clearRect(0,0,mc.width,mc.height);
+      var peak = 0, px = 0, py = 0;
+
+      for(var d=0; d<DY; d++){
+        for(var h=0; h<HR; h++){
+          var v = weight(h,d) * (0.72 + rnd(d*31 + h*7.3) * 0.5);
+          var X = 60 + h*(cellW+GAPH), Y = 34 + d*(cellH+GAPH);
+          if(v > peak){ peak = v; px = X; py = Y; }
+          mx2.fillStyle = 'rgba(255,255,255,' + (0.05 + Math.min(v,1)*0.8).toFixed(3) + ')';
+          mx2.fillRect(X, Y, cellW, cellH);
+        }
+      }
+      /* the busiest hour of the week, flagged */
+      mx2.fillStyle = '#FF2D16';
+      mx2.fillRect(px, py, cellW, cellH);
+
+      mx2.font = '500 13px "IBM Plex Mono", monospace';
+      mx2.fillStyle = 'rgba(255,255,255,0.45)';
+      for(var dd=0; dd<DY; dd++){
+        mx2.fillText(DAYS[dd], 6, 34 + dd*(cellH+GAPH) + cellH*0.75);
+      }
+      mx2.fillText('00:00', 60, 22);
+      mx2.fillText('23:00', mc.width - 46, 22);
+      mx2.fillText('messages per hour · busiest hour flagged', 60, mc.height - 14);
+    }
+    heatmap();
+  }
+
+  /* =============================================================
+     THE HAND — the 21 landmarks MediaPipe tracks
+     ============================================================= */
+  var hc=document.getElementById('hand');
+  if(hc){
+    var hx=hc.getContext('2d');
+    var BASE=[
+      [310,640],
+      [222,590],[168,526],[132,468],[100,418],
+      [258,452],[244,358],[236,296],[230,240],
+      [312,436],[314,332],[316,264],[318,204],
+      [366,448],[376,350],[382,288],[388,234],
+      [418,476],[442,400],[456,352],[468,306]
+    ];
+    var BONES=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],
+               [0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20],
+               [5,9],[9,13],[13,17]];
+    var ht=0;
+
+    function hand(){
+      ht += reduce ? 0 : 0.014;
+      hx.clearRect(0,0,hc.width,hc.height);
+
+      var CX=300, CY=430, S=1.2;
+      var pts=BASE.map(function(p,i){
+        var sway=Math.sin(ht+i*0.35)*(i===0?2:7);
+        var lift=Math.cos(ht*0.8+i*0.22)*(i===0?1:5);
+        return [CX+(p[0]+sway-CX)*S, CY+(p[1]+lift-CY)*S];
+      });
+
+      hx.strokeStyle='rgba(255,255,255,0.34)';
+      hx.lineWidth=3; hx.lineCap='round';
+      BONES.forEach(function(b){
+        hx.beginPath();
+        hx.moveTo(pts[b[0]][0],pts[b[0]][1]);
+        hx.lineTo(pts[b[1]][0],pts[b[1]][1]);
+        hx.stroke();
+      });
+
+      pts.forEach(function(p,i){
+        var tip=(i===4||i===8||i===12||i===16||i===20);
+        hx.beginPath();
+        hx.arc(p[0],p[1],tip?13:8.5,0,Math.PI*2);
+        hx.fillStyle=tip?'#FF2D16':'#FFFFFF';
+        hx.fill();
+      });
+
+      hx.font='500 17px "IBM Plex Mono", monospace';
+      hx.fillStyle='rgba(255,255,255,0.45)';
+      hx.fillText('21 landmarks · no video stored',24,44);
+
+      if(!reduce) requestAnimationFrame(hand);
+    }
+
+    if('IntersectionObserver' in window && !reduce){
+      var hio=new IntersectionObserver(function(es){
+        es.forEach(function(e){ if(e.isIntersecting){ hand(); hio.disconnect(); } });
+      },{threshold:.2});
+      hio.observe(hc);
+    } else { hand(); }
+  }
+})();
+</script>
+
+</body>
+</html>
