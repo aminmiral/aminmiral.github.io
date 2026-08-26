@@ -373,32 +373,45 @@ section{padding-inline:var(--pad);}
       <h2 class="display finding__title rise">ERP<br>Anomaly<br>Bench</h2>
       <div>
         <p class="prose rise">
-          I drove a real Odoo instance — Docker, plus a custom audit addon — through
-          procure-to-pay flows and injected seven fraud typologies into them: duplicate
-          invoices, three-way-match violations, split purchases, subtle overbilling. Every
-          trace and every event came out carrying a ground-truth label.
+          Companies don't publish their ERP logs, and nobody publishes logs with labelled fraud
+          in them. So I built some. I drove a real Odoo instance — Docker, plus an audit addon
+          inside the ERP — through procure-to-pay flows and injected seven fraud typologies:
+          duplicate invoices, three-way-match violations, self-approval, overbilling, threshold-dodging
+          split purchases, 1–3% skims, and after-hours processing. Every trace and event comes out
+          with a ground-truth label.
         </p>
         <p class="prose quiet rise">
-          Then six unsupervised detectors ran against it under leakage-safe temporal splits —
-          Isolation Forest, LOF, one-class SVM, a Markov negative-log-likelihood model,
-          rule-based audit checks. The gap between the two numbers below is the whole point
-          of the project.
+          Eleven detectors then ran against it under a leakage-safe temporal protocol, from audit
+          rules and Isolation Forest up to two deep sequence models. Four typologies are easy —
+          one document is visibly wrong, and everything catches them. The other three are invisible
+          to any method that looks at one trace at a time, deep models included: they score at or
+          near random.
         </p>
         <p class="links rise" style="margin-top:1.9rem;"><a href="https://github.com/aminmiral/erp-anomaly-bench" rel="noopener">aminmiral/erp-anomaly-bench</a></p>
       </div>
     </div>
 
     <div class="score rise">
-      <span class="score__n">1.000</span>
-      <span class="score__lab">Fraud that sits inside a single document is caught perfectly.</span>
-      <span class="score__sub">AUPRC · duplicate invoices, three-way-match violations, overbilling</span>
+      <span class="score__n score__n--miss">0.099</span>
+      <span class="score__lab">A plain Isolation Forest, looking at one trace at a time, cannot see a split purchase at all.</span>
+      <span class="score__sub">AUPRC · split_purchase · single-trace features</span>
     </div>
 
     <div class="score rise">
-      <span class="score__n score__n--miss">0.099</span>
-      <span class="score__lab">Fraud deliberately spread across traces defeats every classical baseline in the set.</span>
-      <span class="score__sub">AUPRC · split purchases, cross-trace</span>
+      <span class="score__n">0.970</span>
+      <span class="score__lab">The same estimator, given time-of-day features and a ±14-day requester×vendor context window.</span>
+      <span class="score__sub">AUPRC · split_purchase · context features · overall 0.536 → 0.947</span>
     </div>
+
+    <p class="prose rise" style="margin-top:clamp(2rem,6vh,4rem);">
+      Nothing about the model changed — only what it was allowed to look at. That plain forest
+      finished roughly 0.5 AUPRC ahead of both deep sequence models. On this benchmark, what a
+      detector can see matters more than how sophisticated it is.
+    </p>
+    <p class="prose quiet rise">
+      One typology still resists everything: a 1–3% skim that hides inside the legitimate ±2%
+      billing variation, best score 0.530. It ships as the benchmark's open challenge.
+    </p>
   </section>
 
   <!-- 5 — signspeak -->
