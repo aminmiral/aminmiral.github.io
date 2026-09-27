@@ -458,6 +458,164 @@ section{padding-inline:var(--pad);}
     </div>
   </section>
 
+  <!-- 6b — open source -->
+  <section class="job">
+    <div class="job__head">
+      <div>
+        <h2 class="display job__title rise">Open<br>Source</h2>
+        <p class="mono rise" style="margin:1.4rem 0 0;">kornia · sktime · 2026</p>
+      </div>
+      <div>
+        <p class="prose rise">
+          I contribute to Python libraries I use — five merged into kornia, the computer vision
+          library built on PyTorch, plus open work in sktime, pandera and diffusers. Each one
+          starts by reproducing the problem on the current main branch, and ships with a test that
+          fails without the fix.
+        </p>
+      </div>
+    </div>
+
+    <div class="work__item rise">
+      <div>
+        <h3 class="work__role">A transformer that routes by category</h3>
+        <p class="work__meta">sktime · pull request #10576 · open</p>
+      </div>
+      <div>
+        <p class="prose">
+          sktime could apply one transformer across a whole panel of time series, but not different
+          transformers to different kinds of series. I added a compositor that labels each series
+          with a categorizer, then applies the transformer chosen for that label, falling back for
+          labels it has not seen.
+        </p>
+        <p class="prose quiet">
+          Around 700 lines with the tests. Along the way I found that inverting a transform routed
+          series by their transformed values rather than the labels learned when fitting, and that
+          a series whose label came back empty was dropped from the output entirely.
+        </p>
+        <p class="links" style="margin-top:1.2rem;"><a href="https://github.com/sktime/sktime/pull/10576" rel="noopener">sktime/sktime#10576</a></p>
+      </div>
+    </div>
+
+    <div class="work__item rise">
+      <div>
+        <h3 class="work__role">Reflections passing as rotations</h3>
+        <p class="work__meta">kornia · pull request #4840 · merged September 2026</p>
+      </div>
+      <div>
+        <p class="prose">
+          A mirrored matrix is not a rotation, but kornia's conversions accepted one silently and
+          returned "no rotation at all" — so an axis flip reaching the function, say from a
+          graphics-to-vision frame change applied on one side only, disappeared without a word.
+          The 3D rotation groups inherited it through the same path, while the 2D group already
+          rejected its own mirror.
+        </p>
+        <p class="prose quiet">
+          Added an opt-in check across five public functions, off by default so existing callers
+          and pose loops pay nothing for it. Closed the tracking issue.
+        </p>
+        <p class="links" style="margin-top:1.2rem;"><a href="https://github.com/kornia/kornia/pull/4840" rel="noopener">kornia/kornia#4840</a></p>
+      </div>
+    </div>
+
+    <div class="work__item rise">
+      <div>
+        <h3 class="work__role">A weight of zero poisoning the gradient</h3>
+        <p class="work__meta">kornia · pull request #4961 · merged September 2026</p>
+      </div>
+      <div>
+        <p class="prose">
+          kornia lets you weight point matches when estimating two-view geometry, and a weight of
+          zero is the documented way to drop one. The maths took a square root of that weight,
+          whose slope at zero is infinite, so anyone training through those weights got a NaN for
+          every dropped match — on older PyTorch versions, where it was not masked.
+        </p>
+        <p class="prose quiet">
+          Rewrote the expression so it never takes the root: the same matrix, now differentiable
+          everywhere. Verified across 240 scenes that the result is unchanged.
+        </p>
+        <p class="links" style="margin-top:1.2rem;"><a href="https://github.com/kornia/kornia/pull/4961" rel="noopener">kornia/kornia#4961</a></p>
+      </div>
+    </div>
+
+    <div class="work__item rise">
+      <div>
+        <h3 class="work__role">An error message that named no way out</h3>
+        <p class="work__meta">kornia · pull request #4907 · merged September 2026</p>
+      </div>
+      <div>
+        <p class="prose">
+          kornia's contrast equalisation splits an image into a grid of tiles and pads the edges by
+          mirroring. When the grid was as large as the image there was nothing left to mirror, and
+          the failure surfaced as a padding error from deep inside PyTorch.
+        </p>
+        <p class="prose quiet">
+          Worked out the smallest image each grid actually admits — the rule differs for odd and
+          even tiles — and put that number in the error.
+        </p>
+        <p class="links" style="margin-top:1.2rem;"><a href="https://github.com/kornia/kornia/pull/4907" rel="noopener">kornia/kornia#4907</a></p>
+      </div>
+    </div>
+
+    <div class="work__item rise">
+      <div>
+        <h3 class="work__role">Broken downloads stayed cached</h3>
+        <p class="work__meta">kornia · pull request #4367 · merged September 2026</p>
+      </div>
+      <div>
+        <p class="prose">
+          kornia caches downloaded model weights, and a caller can pass a check that rejects a bad
+          file. When a fresh download failed that check and there was no other source to try, the
+          file stayed in the cache, so every later call was handed the same broken file until
+          someone deleted it by hand.
+        </p>
+        <p class="prose quiet">
+          Rejected downloads are now removed, and the error reports the rejection. Merged with
+          regression tests.
+        </p>
+        <p class="links" style="margin-top:1.2rem;"><a href="https://github.com/kornia/kornia/pull/4367" rel="noopener">kornia/kornia#4367</a></p>
+      </div>
+    </div>
+
+    <div class="work__item rise">
+      <div>
+        <h3 class="work__role">Compile tests that compiled nothing</h3>
+        <p class="work__meta">kornia · pull request #4373 · merged September 2026</p>
+      </div>
+      <div>
+        <p class="prose">
+          kornia runs its torch.compile tests on every pull request, but only in the test folders
+          its CI config lists. The model tests weren't on that list, so their compile tests passed
+          without compiling anything, and a compile regression in a model would only surface after
+          merging.
+        </p>
+        <p class="prose quiet">
+          I added the folder and documented that the list has to name every one.
+        </p>
+        <p class="links" style="margin-top:1.2rem;"><a href="https://github.com/kornia/kornia/pull/4373" rel="noopener">kornia/kornia#4373</a></p>
+      </div>
+    </div>
+
+    <div class="work__item rise">
+      <div>
+        <h3 class="work__role">A checkpoint that could not be loaded back</h3>
+        <p class="work__meta">diffusers · pull request #14812 · open</p>
+      </div>
+      <div>
+        <p class="prose">
+          A large diffusers model saved in the older pickle format is split across several files,
+          and loading it with the default settings failed to find them — so a checkpoint the
+          library had written could not be read back without knowing which flag to set.
+        </p>
+        <p class="prose quiet">
+          Reported with a reproduction on current main, and fixed so the fallback is strictly
+          additive: I checked 32 save-and-load combinations to confirm nothing that worked before
+          behaves differently.
+        </p>
+        <p class="links" style="margin-top:1.2rem;"><a href="https://github.com/huggingface/diffusers/pull/14812" rel="noopener">huggingface/diffusers#14812</a></p>
+      </div>
+    </div>
+  </section>
+
   <!-- 7a — education -->
   <section class="work">
     <div class="work__item rise">
